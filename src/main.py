@@ -12,8 +12,7 @@ if __name__ == '__main__':
         visualizer = Visualizer()
         visualizer.start()
     except Exception as error:
-        print(traceback.format_exc())
-        logger.write_error('Main.py', 'A vital Error has occurred:\n' + str(traceback.format_exc()))
+        logger.write_error('Main.py', f'A vital Error has occurred:\n{traceback.format_exc()}')
     finally:
         logger.print_log()
     print('Finished Script')

@@ -22,6 +22,9 @@ STUDENT_NUMBER_COLUMN_INDEX = 1
 STUDENT_USERNAME_COLUMN_INDEX = 2
 STUDENT_FIRST_OVERVIEW_COLUMN = 3
 
+ERROR_MISSING_REVIEW = 'missing_review'
+ERROR_VIOLATING_REVIEW = 'violating_review'
+
 
 # Helper methods
 def _get_first_cell_of_sheet(sheet: Worksheet) -> Cell:
@@ -56,7 +59,6 @@ class ExcelMerger(Merger):
         self._load_feedback()
         self._merge_feedback()
         self._save_workbook()
-        self._log_error_reviews()
 
     def _load_document(self):
         self._wb = load_workbook(self.file, data_only=True)
@@ -98,17 +100,19 @@ class ExcelMerger(Merger):
                 for row in range(self._first_feedback_cell.row, self._num_students + self._first_feedback_cell.row):
                     feedback: List = self._get_feedback(reviewer_feedback_sheet, row, task_index)
                     reviewee_num: int = self.get_student_num(row)
+                    reviewee: Student = self._students[reviewee_num]
                     # If student are to be reviewed
                     if reviewee_num in reviewer.students_to_review[task_index]:
                         if _is_feedback_list_empty(feedback):
                             reviewer.add_missing_review(task_index, reviewee_num)
+                            self._log_review_error(ERROR_MISSING_REVIEW, task_index, reviewer, reviewee)
                         else:
-                            reviewee: Student = self._students[reviewee_num]
                             reviewee.add_feedback_from_students(task_index, feedback)
                     # If student shouldn't be reviewed
                     else:
                         if not _is_feedback_list_empty(feedback):
                             reviewer.add_violating_review(task_index, reviewee_num)
+                            self._log_review_error(ERROR_VIOLATING_REVIEW, task_index, reviewer, reviewee)
 
                     pass
 
@@ -122,25 +126,9 @@ class ExcelMerger(Merger):
         try:
             self._wb.save(merge_file_path)
         except PermissionError as error:
-            logger.write_error(self._caller, f'Cannot save merged file due to permission error. Is the file open?')
+            logger.write_error(self._caller, f'EXCEPTION - Cannot save merged file due to permission error. '
+                                             f'Is the file open?')
             raise
-
-    def _log_error_reviews(self):
-        for student_num in self._students:
-            # Print missing reviews
-            student: Student = self._students[student_num]
-            for review in student.missing_review:
-                reviewee: Student = self._students[review['reviewee_num']]
-                task_index: int = review['task_index']
-                logger.write_error(self._caller, f'{student.username} missing review in task {task_index} '
-                                                 f'for {reviewee.username} ')
-
-            # Print violating reviews
-            for review in student.violating_review:
-                reviewee: Student = self._students[review['reviewee_num']]
-                task_index: int = review['task_index']
-                logger.write_error(self._caller, f'{student.username} has input in task {task_index} '
-                                                 f'for {reviewee.username} violating reviewing schema')
 
     ##############################
     # Class level helper methods #
@@ -155,8 +143,8 @@ class ExcelMerger(Merger):
         try:
             student_file = load_workbook(student_file_path, data_only=True)
         except PermissionError as error:
-            logger.write_error(self._caller, f'Cannot open student file ({username}) due to permission error. '
-                                             f'Is the file open?')
+            logger.write_error(self._caller, f'EXCEPTION - Cannot open student file ({username}) due to '
+                                             f'permission error. Is the file open?')
             raise
 
         return student_file
@@ -172,7 +160,7 @@ class ExcelMerger(Merger):
         return student_feedback_sheet
 
     def _get_feedback(self, feedback_sheet: Worksheet, row: int, task_index: int) -> List:
-        feedback_row: int = row # self._get_feedback_row(student_num)
+        feedback_row: int = row
         feedback_start_column: int = STUDENT_FIRST_OVERVIEW_COLUMN + task_index * self.columns_per_task
 
         feedback: List = []
@@ -193,8 +181,7 @@ class ExcelMerger(Merger):
         :param student: the student object which holds the feedback
         :return:
         """
-        if student.number == 2:
-            print()
+
         row: int = self._get_row(student.number)
         for feedback_item in student.feedback:
             task_index: int = feedback_item['task_index']
@@ -211,18 +198,18 @@ class ExcelMerger(Merger):
         :return:
         """
         start_column: int = STUDENT_FIRST_OVERVIEW_COLUMN + index * self.num_reviewers_per_task * self.columns_per_task
+
+        # Move to next set of columns if there exists multiple sets of feedback for the student's task
+        while self._is_task_reviewed(start_column, row) is True:
+            start_column = start_column + self.columns_per_task
+
         for feedback_index in range(self.columns_per_task):
             column: int = start_column + feedback_index
-            # Move to second set of columns if there exists multiple sets of feedback for the student's task
-            # TODO: Make this able to take more than two sets of feedback per task into account
-            if self._is_feedback_for_task_present(column, row):
-                column = column + self.columns_per_task
 
             feedback_cell: Cell = self._feedback_sheet[index_to_cell_name(column, row)]
             feedback_cell.value = feedback[feedback_index]
 
-    # TODO: refactor name
-    def _is_feedback_for_task_present(self, column, row):
+    def _is_task_reviewed(self, column, row):
         for feedback_index in range(self.columns_per_task):
             feedback_column: int = column + feedback_index
             feedback_cell: Cell = self._feedback_sheet[index_to_cell_name(feedback_column, row)]
@@ -233,3 +220,11 @@ class ExcelMerger(Merger):
 
     def _get_row(self, student_num: int) -> int:
         return self._first_feedback_cell.row + student_num - 1
+
+    def _log_review_error(self, error: str, task_index: int, reviewer: Student, reviewee: Student):
+        if error is ERROR_MISSING_REVIEW:
+            logger.write_error(self._caller, f'{reviewer.username} missing review in task {task_index} '
+                                             f'for {reviewee.username} ')
+        elif error is ERROR_VIOLATING_REVIEW:
+            logger.write_error(self._caller, f'{reviewer.username} has input in task {task_index} '
+                                             f'for {reviewee.username} violating reviewing schema')

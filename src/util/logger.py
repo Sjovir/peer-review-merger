@@ -24,11 +24,13 @@ class Logger:
 
     def write_log(self, caller, msg):
         log: Log = Log(caller, msg)
-        print(log)
+        print(f'INFO: {log}')
         self._info_log.append(log)
 
     def write_error(self, caller, msg):
-        self._error_log.append(Log(caller, msg))
+        log: Log = Log(caller, msg)
+        print(f'ERROR: {log}')
+        self._error_log.append(log)
 
     def print_log(self):
         if self._output_folder is None:
@@ -45,8 +47,8 @@ class Logger:
                 for log in self._error_log:
                     logFile.write(f'{log.caller}: {log.msg}\n')
 
-        for error_log in self._error_log:
-            print(error_log)
+        # for error_log in self._error_log:
+        #     print(error_log)
 
 
 class Log:
