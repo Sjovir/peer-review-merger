@@ -33,13 +33,3 @@ def index_to_column(index: int) -> str:
 
 def cell_above(sheet: Worksheet, cell: Cell) -> Cell:
     return sheet.cell(column=cell.column, row=cell.row-1)
-
-
-class CellBuilder:
-
-    def __init__(self):
-        pass
-
-    def build_from_index(column: int, row: int) -> Cell:
-        column = index_to_column(column)
-        return Cell(column, row)
