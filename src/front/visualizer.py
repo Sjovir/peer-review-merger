@@ -208,9 +208,12 @@ class Visualizer:
                                        command=lambda: self._save_view_bag(window),
                                        width=30,
                                        height=2)
-        self._merge_button['font'] = font.Font(size=15, family='Calibri')
+        self._merge_button['font'] = BUTTON_FONT
         self._merge_button.pack()
 
+    ##############################
+    # Class level helper methods #
+    ##############################
     def _select_template_file(self):
         template_file: str = select_file(TEMPLATE_FILE_SELECT_DIRECTORY_DIALOG_TITLE, self._template_file)
         if template_file:
@@ -245,9 +248,6 @@ class Visualizer:
         self._merge = True
         window.quit()
 
-    ##############################
-    # Class level helper methods #
-    ##############################
     def _validate_input(self):
         if self._template_file.get().endswith('.xlsx'):
             self._merge_button['state'] = 'normal'
