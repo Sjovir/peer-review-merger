@@ -9,7 +9,7 @@ import tkinter as tk
 
 from util.logger import logger
 
-WINDOW_WIDTH = 1000
+WINDOW_WIDTH = 1200
 WINDOW_HEIGHT = 700
 
 TEMPLATE_FILE_FRAME_TEXT = 'Template file'
@@ -41,6 +41,8 @@ SETTINGS_COLUMNS_PER_TASK_DEFAULT_VALUE = 6
 
 MERGE_BUTTON_TEXT = 'Merge'
 
+LOG_FRAME_TITLE = 'Log'
+
 FRAME_FONT = None
 LABEL_FONT = None
 BUTTON_FONT = None
@@ -63,12 +65,12 @@ def setup_window(window: tk.Tk):
     window.geometry('{}x{}+{}+{}'.format(width, height, x, y))
 
 
-def add_separator(window: tk.Tk):
+def add_separator(window: tk.Widget):
     separator = tk.Frame(window, height=2, bd=1)
     separator.pack(fill='x', padx=5, pady=5)
 
 
-def add_select_frame(window: tk.Tk, title: str, reference_variable: StringVar, button_text: str, button_cmd):
+def add_select_frame(window: tk.Widget, title: str, reference_variable: StringVar, button_text: str, button_cmd):
     frame = tk.LabelFrame(window, text=title, font=FRAME_FONT)
     frame.pack(fill='x', padx=5)
     label = tk.Label(frame, textvariable=reference_variable)
@@ -147,17 +149,25 @@ class Visualizer:
 
         setup_window(window)
 
-        add_separator(window)
-        self._setup_template_frame(window)
-        add_separator(window)
-        self._setup_input_frame(window)
-        add_separator(window)
-        self._setup_output_frame(window)
-        add_separator(window)
-        self._setup_settings_frame(window)
-        add_separator(window)
-        self._setup_merge_frame(window)
-        add_separator(window)
+        input_frame = tk.Frame(window)
+        input_frame.pack(side='left')
+
+        add_separator(input_frame)
+        self._setup_template_frame(input_frame)
+        add_separator(input_frame)
+        self._setup_input_frame(input_frame)
+        add_separator(input_frame)
+        self._setup_output_frame(input_frame)
+        add_separator(input_frame)
+        self._setup_settings_frame(input_frame)
+        add_separator(input_frame)
+        self._setup_merge_frame(input_frame)
+        add_separator(input_frame)
+
+        log_frame = tk.LabelFrame(window, text=LOG_FRAME_TITLE, font=FRAME_FONT)
+        log_frame.pack(fill='y', side='right', padx=5, pady=5)
+
+        self._setup_log_frame(log_frame)
 
         self._validate_input()
 
@@ -166,22 +176,22 @@ class Visualizer:
     def _execute(self):
         self._executor.execute(self._view_bag)
 
-    def _setup_template_frame(self, window: tk.Tk):
+    def _setup_template_frame(self, window: tk.Widget):
         self._template_file = StringVar(value=TEMPLATE_FILE_LABEL_DEFAULT_TEXT)
         add_select_frame(window, TEMPLATE_FILE_FRAME_TEXT, self._template_file, TEMPLATE_FILE_BUTTON_TEXT,
                          self._select_template_file)
 
-    def _setup_input_frame(self, window: tk.Tk):
+    def _setup_input_frame(self, window: tk.Widget):
         self._input_folder = StringVar(value=INPUT_FOLDER_LABEL_DEFAULT_TEXT)
         add_select_frame(window, INPUT_FOLDER_FRAME_TEXT, self._input_folder, INPUT_FOLDER_BUTTON_TEXT,
                          self._select_input_folder)
 
-    def _setup_output_frame(self, window: tk.Tk):
+    def _setup_output_frame(self, window: tk.Widget):
         self._output_folder = StringVar(value=OUTPUT_FOLDER_LABEL_DEFAULT_TEXT)
         add_select_frame(window, OUTPUT_FOLDER_FRAME_TEXT, self._output_folder, OUTPUT_FOLDER_BUTTON_TEXT,
                          self._select_output_folder)
 
-    def _setup_settings_frame(self, window: tk.Tk):
+    def _setup_settings_frame(self, window: tk.Widget):
         settings_frame = tk.LabelFrame(window, text=SETTINGS_FRAME_TEXT, font=FRAME_FONT)
         settings_frame.pack(fill='x', padx=5)
 
@@ -200,7 +210,7 @@ class Visualizer:
         self._columns_per_task = IntVar(value=SETTINGS_COLUMNS_PER_TASK_DEFAULT_VALUE)
         add_setting_frame(settings_frame, SETTINGS_COLUMNS_PER_TASK_LABEL_TEXT, self._columns_per_task)
 
-    def _setup_merge_frame(self, window: tk.Tk):
+    def _setup_merge_frame(self, window: tk.Widget):
         bottom_frame = tk.Frame(window)
         bottom_frame.pack(expand='yes')
         self._merge_button = tk.Button(bottom_frame,
@@ -210,6 +220,11 @@ class Visualizer:
                                        height=2)
         self._merge_button['font'] = BUTTON_FONT
         self._merge_button.pack()
+
+    def _setup_log_frame(self, window: tk.Widget):
+        log = tk.Text(window)
+        log.config(state='disabled')
+        log.pack(expand='true', fill='both', padx=5, pady=5)
 
     ##############################
     # Class level helper methods #
@@ -233,7 +248,7 @@ class Visualizer:
             self._validate_input()
             logger.set_output_folder(output_folder)
 
-    def _save_view_bag(self, window: tk.Tk):
+    def _save_view_bag(self, window: tk.Widget):
         self._view_bag: MergerViewBag = MergerViewBag()
 
         self._view_bag.file = self._template_file.get()
