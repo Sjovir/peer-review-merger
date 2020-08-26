@@ -3,7 +3,7 @@ import platform
 
 
 class Logger:
-    FILE_NAME = '../log.txt'
+    FILE_NAME = 'log.txt'
     HEADER = 'Log for Peer Review Merger'
     INFO_TITLE = 'Info:'
     ERROR_TITLE = 'Errors:'
@@ -36,8 +36,8 @@ class Logger:
         if self._output_folder is None:
             self.set_output_folder(None)
 
-        logPath = self._output_folder + self.FILE_NAME
-        with open(logPath, 'w') as logFile:
+        log_path = f'{self._output_folder}\\{self.FILE_NAME}'
+        with open(log_path, 'w') as logFile:
             if len(self._info_log) > 0:
                 logFile.write(f'{self.INFO_TITLE}\n')
                 for log in self._info_log:
@@ -59,5 +59,6 @@ class Log:
 
     def __str__(self):
         return f'{self.caller}: {self.msg}'
+
 
 logger = Logger()

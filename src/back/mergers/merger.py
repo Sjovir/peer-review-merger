@@ -2,7 +2,7 @@ from util.logger import logger
 
 
 class Merger:
-    _caller = 'Merger.py'
+    _caller = 'Merger'
     file: str = None
     input_folder: str = None
     output_folder: str = None
