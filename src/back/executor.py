@@ -26,5 +26,5 @@ class Executor:
     def _patch_view_bag(self, view_bag: MergerViewBag):
         for attribute_name in view_bag.get_attribute_names():
             view_bag_value = view_bag.__getattribute__(attribute_name)
-            print(f'attr: {attribute_name}, value: {view_bag_value}')
+            # print(f'attr: {attribute_name}, value: {view_bag_value}')
             self._merger.__setattr__(attribute_name, view_bag_value)

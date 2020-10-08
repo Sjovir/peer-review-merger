@@ -46,14 +46,16 @@ LOG_FRAME_TITLE = 'Log'
 FRAME_FONT = None
 LABEL_FONT = None
 BUTTON_FONT = None
+LOG_FONT = None
 
 
 # Helper methods
 def setup_fonts():
-    global FRAME_FONT, LABEL_FONT, BUTTON_FONT
+    global FRAME_FONT, LABEL_FONT, BUTTON_FONT, LOG_FONT
     FRAME_FONT = font.Font(size=15, family='Calibri')
     LABEL_FONT = font.Font(size=15, family='Calibri')
     BUTTON_FONT = font.Font(size=15, family='Calibri')
+    LOG_FONT = font.Font(size=14, family='Calibri')
 
 
 def setup_window(window: tk.Tk):
@@ -131,6 +133,8 @@ class Visualizer:
 
     _merge_button: tk.Button = None
 
+    _log: tk.Text = None
+
     _merge: bool = False
 
     def __init__(self):
@@ -170,6 +174,8 @@ class Visualizer:
         self._setup_log_frame(log_frame)
 
         self._validate_input()
+
+        logger.set_window(window=window)
 
         window.mainloop()
 
@@ -219,12 +225,19 @@ class Visualizer:
                                        width=30,
                                        height=2)
         self._merge_button['font'] = BUTTON_FONT
-        self._merge_button.pack()
+        self._merge_button.pack(padx=5)
 
     def _setup_log_frame(self, window: tk.Widget):
-        log = tk.Text(window)
-        log.config(state='disabled')
-        log.pack(expand='true', fill='both', padx=5, pady=5)
+        self._log = tk.Text(window)
+        self._log.configure(font=LOG_FONT)
+        self._log.pack(expand='true', fill='both', padx=5, pady=5)
+
+        logger.set_log_frame_method(self._write_to_log_frame)
+
+    def _write_to_log_frame(self, text: str):
+        self._log.config(state='normal')
+        self._log.insert('1.0', f'{text}\n')
+        self._log.config(state='disabled')
 
     ##############################
     # Class level helper methods #

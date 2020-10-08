@@ -17,7 +17,6 @@ FIRST_STUDENT_NUMBER = 1
 FIRST_CELL_SEARCH_LIMIT = 50
 LAST_CELL_SEARCH_LIMIT = 150
 
-NUM_STUDENTS_TO_REVIEW = 2
 STUDENT_NUMBER_COLUMN_INDEX = 1
 STUDENT_USERNAME_COLUMN_INDEX = 2
 STUDENT_FIRST_OVERVIEW_COLUMN = 3
@@ -78,8 +77,8 @@ class ExcelMerger(Merger):
 
             for task_index in range(self.num_tasks):
                 students_to_review: List = []
-                for task_to_review in range(NUM_STUDENTS_TO_REVIEW):
-                    column_index: int = STUDENT_FIRST_OVERVIEW_COLUMN + task_index * NUM_STUDENTS_TO_REVIEW \
+                for task_to_review in range(self.num_reviewers_per_task):
+                    column_index: int = STUDENT_FIRST_OVERVIEW_COLUMN + task_index * self.num_reviewers_per_task \
                                         + task_to_review
                     student_cell: Cell = self._overview_sheet[index_to_cell_name(column_index, row_index)]
                     students_to_review.append(student_cell.value)

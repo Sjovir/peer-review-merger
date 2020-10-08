@@ -8,6 +8,9 @@ class Logger:
     INFO_TITLE = 'Info:'
     ERROR_TITLE = 'Errors:'
 
+    _write_to_log_frame = None
+    _window = None
+
     def __init__(self):
         self._info_log = []
         self._error_log = []
@@ -22,15 +25,31 @@ class Logger:
             else:
                 self._output_folder = '/'
 
+    def set_log_frame_method(self, log_frame_method):
+        self._write_to_log_frame = log_frame_method
+
+    def set_window(self, window):
+        self._window = window
+
     def write_log(self, caller, msg):
         log: Log = Log(caller, msg)
         print(f'INFO: {log}')
         self._info_log.append(log)
 
+        if self._write_to_log_frame:
+            self._write_to_log_frame(f'{msg}')
+            if self._window:
+                self._window.update()
+
     def write_error(self, caller, msg):
         log: Log = Log(caller, msg)
         print(f'ERROR: {log}')
         self._error_log.append(log)
+
+        if self._write_to_log_frame:
+            self._write_to_log_frame(f'{msg}')
+            if self._window:
+                self._window.update()
 
     def print_log(self):
         if self._output_folder is None:
@@ -42,13 +61,11 @@ class Logger:
                 logFile.write(f'{self.INFO_TITLE}\n')
                 for log in self._info_log:
                     logFile.write(f'{log.caller}: {log.msg}\n')
+                logFile.write(f'\n')
             if len(self._error_log) > 0:
                 logFile.write(f'{self.ERROR_TITLE}\n')
                 for log in self._error_log:
                     logFile.write(f'{log.caller}: {log.msg}\n')
-
-        # for error_log in self._error_log:
-        #     print(error_log)
 
 
 class Log:
