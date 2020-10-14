@@ -148,6 +148,7 @@ class Visualizer:
 
     def _show_dialog(self):
         window = tk.Tk()
+        window.title('Peer Review Merger')
 
         setup_fonts()
 
